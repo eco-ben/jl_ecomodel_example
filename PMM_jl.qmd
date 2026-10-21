@@ -1,0 +1,192 @@
+---
+title: "Population Viability Analysis Demonstration: Julia"
+format: html
+---
+
+# Background
+
+We will use an example from the book `A Practical Handbook for Population Viability Analysis` (Morris et al. 1999).
+
+This example demonstrates possible code and techniques to perform population
+viability analysis using population Projection Matrix Models using the
+example in Box 4.1.
+
+A Projection Matrix Model combines life-history data (transitions between
+different life stages) and abundance estimates to project possible future
+outcomes for a population.
+This example uses data on American Oystercatchers.
+
+![American Oystercatcher (CornellLab: All About Birds)](figs/American_Oystercatcher_AAB.jpg)
+
+# Julia packages and environments
+
+Julia uses environments to install and manage different packages that are used in a project.
+This is accessed by pressing `]` in the Julia terminal (return using `Ctrl + c`).
+
+<!-- Can also be accessed using `Pkg.*()` e.g. `Pkg.add()` or `Pkg.rm()` -->
+
+Required package names are recorded in the `Project.toml` file.
+Julia and package versions are recorded in the `Manifest.toml` file.
+These are machine-edited files that do not need to be edited manually.
+
+Package management commands:
+- `activate` : activate a new environment in the current folder. This creates `Project.toml`
+and `Manifest.toml` files to create an environment.
+- `instantiate` : setup an environment from existing `*.toml` files. This is used if you
+clone a project from GitHub for example.
+- `add` : Add a package (can include versions or GitHub repositories).
+- `rm` : Remove a package from the environment.
+- `status` : See current environment status (packages and julia version).
+- `pin` : Set the version of a package(s) to be stable. This is useful for reproducibility and 
+ensuring consistent package version use.
+
+## Example
+
+Use the REPL (terminal) to activate the package manager, and add `DataFrames` package.
+`]` -> `add DataFrames`
+
+Then the package can be loaded in the session.
+```{julia}
+using DataFrames # `using` is similar to `library` in R.
+
+# You can also use `import` instead of `using`
+```
+
+# Step 1: Stage-structured matrix
+
+The first step of using a Projected Matrix Model is to create a transition matrix between
+components of the target population.
+
+- Matrix rows and columns represent stages of the population of interest
+- Values represent the rate of transition (annual or other temporal scale) between each combination of size classes
+- Columns represent the stage transitioning FROM and rows represent the stage transitioning TO
+
+To do this in Julia we create an object of type `Matrix{Float64}`.
+
+```{julia}
+# This is a square matrix where values represent transitions between population stages
+# This matrix is in the format:
+#                                   FROM
+#                   Juveniles   Sub-adults  Adults
+#       Juveniles       0           0           0.054
+#   TO: Sub-adults      0.665       0           0
+#       Adults          0           0.724       0.95
+
+# There are multiple ways to create this matrix
+# Simplest: Creating a matrix of Float64 values directly
+ao_stage_matrix = [
+    0      0      0.054;
+    0.665   0      0;
+    0      0.724  0.95
+]
+
+# Creating a matrix from DataFrame columns
+ao_stages = DataFrame(
+    to = ["juveniles", "sub_adults", "adults"], # Vector of strings
+    juveniles = [0, 0.665, 0], # Vector of Float64
+    sub_adults = [0, 0, 0.724],
+    adults = [0.054, 0, 0.95]
+)
+# From selection of columns
+ao_stage_matrix = Matrix(ao_stages[:, [:juveniles, :sub_adults, :adults]])
+
+# From 'inverse' selection of columns
+ao_stage_matrix = Matrix(ao_stage[:, Not(:to)])
+
+ao_stage_matrix
+typeof(ao_stage_transitions)
+```
+
+# Step 2: Initial population conditions
+
+Step 2 is to setup the initial population conditions in a population state vector.
+This holds current values for the abundance of each stage (i.e. N~0~).
+
+```{julia}
+# Initial population state in the format
+#       J  S-A  A
+N_0 = [40, 50, 60]
+```
+
+# Step 3: Matrix multiplication projection
+
+The third step in projection matrix modelling is to project the population state using
+transition values.
+
+```{julia}
+N_1 = ao_stage_matrix * N_0
+```
+
+# Projection Matrix Modelling
+
+Now we can turn the matrix multiplication into a model function that will project the
+population for a determined number of years.
+
+Creating a `function` in julia uses the `function` and `end` keywords.
+
+```{julia}
+function project_model(
+    initial_conditions::Vector{Union{Float64, Int64}},
+    transition_parameter_matrix::Matrix{Float64},
+    years::Int64
+)::Matrix{Float64}
+    # Create an empty array to hold the results for the model
+    n_components = length(initial_conditions)
+    proj_results = fill(NaN, n_components, years + 1)
+
+    # Allocate the initial conditions to the initial year column
+    proj_results[:, 1] = initial_conditions
+    
+    # Now loop through each year and combine the transition matrix with the previous year's population state
+    for year in 1:years
+        proj_results[:, year + 1] = transition_parameter_matrix * proj_results[:, year]
+    end
+
+    return proj_results
+end
+```
+
+# Visualisation
+Now we can project the population model for 100 years and visualise the projections.
+
+```{julia}
+projections_100t = project_model(N_0, ao_stage_matrix, 99)
+```
+
+There are two main ecosystems for visualisation in julia:
+Plots.jl, Makie.jl and Gadfly.jl
+
+I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains the
+backend Makie.jl packages (you do not need to install) and several front-end packages 
+(that you will install) depending on your use case.
+
+Makie.jl provides the functionality and the backends provide the rendering of plots.
+CairoMakie.jl is great for fast, high resolution, publication quality plotting.
+GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots.
+Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar
+to `ggplot2` in R.
+
+## Plotting with base Makie.jl for fine-scale control
+```{julia}
+using GLMakie
+
+# Basic plotting:
+fig = series(projections_100t)
+
+# Finer control plotting:
+fig = Figure(size = (800, 600), fontsize=12)
+ax = Axis(fig[1, 1])
+
+series!(ax, projections_100t, color=[:red, :green, :blue]) # Adding control of colours
+legend_entries = [
+    PolyElement(; color=:red),
+    PolyElement(; color=:green),
+    PolyElement(; color=:blue)
+]
+Legend(fig[2, 1], legend_entries, ["juveniles", "sub-adults", "adults"]; tell_width=false, tell_height=false, orientation=:horizontal)
+```
+
+## Plotting algebraically with AlgebraOfGraphics.jl and Makie.jl for speed
+
+```{julia}
+```
