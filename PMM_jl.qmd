@@ -1,61 +1,50 @@
 ---
 title: "Population Viability Analysis Demonstration: Julia"
-format: html
+engine: julia
+format:
+  html:
+    embed-resources: true
+    highlight-style: dracula
+    theme:
+      dark: darkly
 ---
 
 # Background
 
 We will use an example from the book `A Practical Handbook for Population Viability Analysis` (Morris et al. 1999).
 
-This example demonstrates possible code and techniques to perform population
-viability analysis using population Projection Matrix Models using the
-example in Box 4.1.
+This example demonstrates possible code and techniques to perform population viability analysis using population Projection Matrix Models using the example in Box 4.1.
 
-A Projection Matrix Model combines life-history data (transitions between
-different life stages) and abundance estimates to project possible future
-outcomes for a population.
-This example uses data on American Oystercatchers.
+A Projection Matrix Model combines life-history data (transitions between different life stages) and abundance estimates to project possible future outcomes for a population. This example uses data on American Oystercatchers.
 
 ![American Oystercatcher (CornellLab: All About Birds)](figs/American_Oystercatcher_AAB.jpg)
 
 # Julia packages and environments
 
-Julia uses environments to install and manage different packages that are used in a project.
-This is accessed by pressing `]` in the Julia terminal (return using `Ctrl + c`).
+Julia uses environments to install and manage different packages that are used in a project. This is accessed by pressing `]` in the Julia terminal (return using `Ctrl + c`).
 
 <!-- Can also be accessed using `Pkg.*()` e.g. `Pkg.add()` or `Pkg.rm()` -->
 
-Required package names are recorded in the `Project.toml` file.
-Julia and package versions are recorded in the `Manifest.toml` file.
-These are machine-edited files that do not need to be edited manually.
+Required package names are recorded in the `Project.toml` file. Julia and package versions are recorded in the `Manifest.toml` file. These are machine-edited files that do not need to be edited manually.
 
-Package management commands:
-- `activate` : activate a new environment in the current folder. This creates `Project.toml`
-and `Manifest.toml` files to create an environment.
-- `instantiate` : setup an environment from existing `*.toml` files. This is used if you
-clone a project from GitHub for example.
-- `add` : Add a package (can include versions or GitHub repositories).
-- `rm` : Remove a package from the environment.
-- `status` : See current environment status (packages and julia version).
-- `pin` : Set the version of a package(s) to be stable. This is useful for reproducibility and 
-ensuring consistent package version use.
+Package management commands: - `activate` : activate a new environment in the current folder. This creates `Project.toml` and `Manifest.toml` files to create an environment. - `instantiate` : setup an environment from existing `*.toml` files. This is used if you clone a project from GitHub for example. - `add` : Add a package (can include versions or GitHub repositories). - `rm` : Remove a package from the environment. - `status` : See current environment status (packages and julia version). - `pin` : Set the version of a package(s) to be stable. This is useful for reproducibility and ensuring consistent package version use.
 
 ## Example
 
-Use the REPL (terminal) to activate the package manager, and add `DataFrames` package.
-`]` -> `add DataFrames`
+Use the REPL (terminal) to activate the package manager, and add `DataFrames` package. `]` -\> `add DataFrames`
 
 Then the package can be loaded in the session.
+
 ```{julia}
 using DataFrames # `using` is similar to `library` in R.
+using Statistics # provides statistical functions such as `median`, `quantile` etc.
 
 # You can also use `import` instead of `using`
 ```
 
 # Step 1: Stage-structured matrix
 
-The first step of using a Projected Matrix Model is to create a transition matrix between
-components of the target population.
+The first step of using a Projected Matrix Model is to create a transition matrix between components of the target population.
 
 - Matrix rows and columns represent stages of the population of interest
 - Values represent the rate of transition (annual or other temporal scale) between each combination of size classes
@@ -91,16 +80,15 @@ ao_stages = DataFrame(
 ao_stage_matrix = Matrix(ao_stages[:, [:juveniles, :sub_adults, :adults]])
 
 # From 'inverse' selection of columns
-ao_stage_matrix = Matrix(ao_stage[:, Not(:to)])
+ao_stage_matrix = Matrix(ao_stages[:, Not(:to)])
 
 ao_stage_matrix
-typeof(ao_stage_transitions)
+typeof(ao_stage_matrix)
 ```
 
 # Step 2: Initial population conditions
 
-Step 2 is to setup the initial population conditions in a population state vector.
-This holds current values for the abundance of each stage (i.e. N~0~).
+Step 2 is to setup the initial population conditions in a population state vector. This holds current values for the abundance of each stage (i.e. N~0~).
 
 ```{julia}
 # Initial population state in the format
@@ -110,8 +98,7 @@ N_0 = [40, 50, 60]
 
 # Step 3: Matrix multiplication projection
 
-The third step in projection matrix modelling is to project the population state using
-transition values.
+The third step in projection matrix modelling is to project the population state using transition values.
 
 ```{julia}
 N_1 = ao_stage_matrix * N_0
@@ -119,14 +106,13 @@ N_1 = ao_stage_matrix * N_0
 
 # Projection Matrix Modelling
 
-Now we can turn the matrix multiplication into a model function that will project the
-population for a determined number of years.
+Now we can turn the matrix multiplication into a model function that will project the population for a determined number of years.
 
 Creating a `function` in julia uses the `function` and `end` keywords.
 
 ```{julia}
 function project_model(
-    initial_conditions::Vector{Union{Float64, Int64}},
+    initial_conditions::Vector{<:Real},
     transition_parameter_matrix::Matrix{Float64},
     years::Int64
 )::Matrix{Float64}
@@ -147,26 +133,23 @@ end
 ```
 
 # Visualisation
+
 Now we can project the population model for 100 years and visualise the projections.
 
 ```{julia}
 projections_100t = project_model(N_0, ao_stage_matrix, 99)
 ```
 
-There are two main ecosystems for visualisation in julia:
-Plots.jl, Makie.jl and Gadfly.jl
+There are two main ecosystems for visualisation in julia: Plots.jl, Makie.jl and Gadfly.jl
 
-I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains the
-backend Makie.jl packages (you do not need to install) and several front-end packages 
-(that you will install) depending on your use case.
+I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains the backend Makie.jl packages (you do not need to install) and several front-end packages (that you will install) depending on your use case.
 
-Makie.jl provides the functionality and the backends provide the rendering of plots.
-CairoMakie.jl is great for fast, high resolution, publication quality plotting.
-GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots.
-Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar
-to `ggplot2` in R.
+Makie.jl provides the functionality and the backends provide the rendering of plots. CairoMakie.jl is great for fast, high resolution, publication quality plotting. GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots. Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar to `ggplot2` in R.
 
 ## Plotting with base Makie.jl for fine-scale control
+
+Using Makie.jl directly allows more fine-scale control, and more plot types (e.g. animations, 3D plots) but can take more time to develop.
+
 ```{julia}
 using GLMakie
 
@@ -183,10 +166,192 @@ legend_entries = [
     PolyElement(; color=:green),
     PolyElement(; color=:blue)
 ]
-Legend(fig[2, 1], legend_entries, ["juveniles", "sub-adults", "adults"]; tell_width=false, tell_height=false, orientation=:horizontal)
+Legend(fig[2, 1], legend_entries, ["juveniles", "sub_adults", "adults"]; tell_width=false, tell_height=false, orientation=:horizontal)
+
+display(fig)
 ```
 
-## Plotting algebraically with AlgebraOfGraphics.jl and Makie.jl for speed
+## Plotting algebraically with AlgebraOfGraphics.jl for speed
+
+Plotting with AlgebraOfGraphics.jl uses Makie.jl behind the scenes, so all plots can be custom modified. This package allows more fast plotting from DataFrames, similar to ggplot2, but has fewer plot types available than base Makie.jl.
 
 ```{julia}
+# using GLMakie # Would usually be required if not loaded already
+using AlgebraOfGraphics
+
+# To work with AlgebraOfGraphics.jl we need a DataFrame, similar to ggplot2 in R
+# To do this we transpose the matrix and add column names
+projection_df = DataFrame(Matrix(projections_100t'), ["juveniles", "sub_adults", "adults"])
+projection_df.timestep = 1:nrow(projection_df)
+
+# Convert this to a long-format `stack` is equivalent to `pivot_longer` (`unstack` is equivalent to `pivot_wider`)
+projection_df = stack(projection_df, [:juveniles, :sub_adults, :adults], :timestep; variable_name=:stage, value_name=:abundance)
+
+# Plotting with AlgebraOfGraphics
+# mapping() is equivalent to `aes` in ggplot() functions
+# visual() determines the type of plot
+# draw() renders the output, and applies additional settings e.g. figure sizes, layouts, fontsize etc.
+projection_lines = data(projection_df) * mapping(:timestep, :abundance, color=:stage) * visual(Lines)
+fig = draw(projection_lines)
+```
+
+# Example of stochastic simulation and plotting workflow with multiple dispatch
+
+When considering our population, population decline may by due to a low reproduction rate `0.054`. Transition rates may be affected by stochastic environmental variation, affecting population projections.
+
+In this example we incorporate stochasticity by drawing our rate values from continuous distributions. For simplicity, we will use uniform distributions of rate values loosely based on the values from Morris et al. (1999). We will only vary the fecundity rates (adult to juvenile transition) and adult survival rates (adult to adult transition).
+
+We do this with the `Distributions.jl` package which provides functionality for statistical distributions and sampling. We use `Dirac()` to just sample a constant value (i.e. keep values from Morris et al.) and `Uniform(a, b)` to specify a uniform distribution between values `a` and `b`.
+
+We format these distributions in a matrix. We then use Julia *broadcasting*. Broadcasting runs a function over each element in an array. This functionality uses a `.` before function brackets and the same as using a `for` loop or `map` function to draw each of the distributions in our object.
+
+## Creating distributions
+
+```{julia}
+using Distributions
+
+# Create a matrix of distributions for our sampling
+dist_stage_matrix = UnivariateDistribution[
+    Dirac(0.0)      Dirac(0.0)      Uniform(0.054 - 0.05, 0.054 + 0.05)
+    Dirac(0.665)    Dirac(0.0)      Dirac(0.0)
+    Dirac(0.0)      Dirac(0.724)    Uniform(0.95 - 0.05, 0.95 + 0.05)
+]
+
+# Formatting the distributions as a matrix ensures that when drawn with rand.(), we keep the matrix format
+rand.(dist_stage_matrix)
+```
+
+We can now sample values for many different model projections.
+
+## Multiple dispatch
+
+Multiple dispatch is a feature of Julia that lets you define multiple methods for a single function depending on the type of the arguments given. This means that functions can have different behaviour depending on the type of arguments.
+
+Currently our function `project_model()` has one method, where the `transition_parameter_matrix` argument is of the type `Matrix{Float64}` (so this will not work with our distribution matrix).
+
+We can use multiple dispatch to create a second method for this function so that different behaviour is used when the type of `transition_parameter_matrix` is `Matrix{UnivariateDistribution}`.
+
+Defining a new method for the function is the same how we defined a function earlier.
+
+```{julia}
+# Here we can see that this function call will produce an error because `project_model` doesn't accept our distribution matrix yet.
+#project_model(N_0, dist_stage_matrix, 2)
+```
+
+```{julia}
+function project_model(
+    initial_conditions::Vector{<:Real},
+    transition_parameter_matrix::Matrix{UnivariateDistribution},
+    years::Int64
+)::Matrix{Float64}
+    # Create an empty array to hold the results for the model
+    n_components = length(initial_conditions)
+    proj_results = fill(NaN, (n_components, years + 1))
+
+    # Allocate the initial conditions to the initial year column
+    proj_results[:, 1] = initial_conditions
+    
+    # Now loop through each year and combine the transition matrix with the previous year's population state
+    for year in 1:years
+        proj_results[:, year + 1] = rand.(transition_parameter_matrix) * @view proj_results[:, year]
+    end
+
+    return proj_results
+end
+```
+
+## Simulations
+
+Now we can use this new model method to project many stochastic simulations of our PMM and visualise the results. We still use `N_0` as our initial population state, and model `99` years.
+
+```{julia}
+# We will run the model for 100,000 simulations
+n_stages = length(N_0)
+n_sim = 100000
+years = 99
+
+# Setup results array
+stochastic_results = fill(NaN, n_stages, years + 1, n_sim)
+
+# Use a for loop to perform each simulation.
+# This could easily be parallelised using the FLoops.jl package by adding @floop before `for`
+for i in 1:n_sim
+    stochastic_results[:, :, i] = project_model(N_0, dist_stage_matrix, years)
+end
+```
+
+# Plotting
+
+Plotting a neat figure with median timeseries and bands that represent 95% quantiles.
+
+```{julia}
+# We might want to summarise these simulations with a median time series and 95% quantile bands.
+median_timeseries = median(stochastic_results; dims=3) |> (x -> dropdims(x; dims=3))
+median_df = DataFrame(Matrix(median_timeseries'), ["juveniles_med", "sub_adults_med", "adults_med"])
+
+low_bound_timeseries = mapslices(x -> quantile(x, 0.025), stochastic_results; dims=3) |> (x -> dropdims(x; dims=3))
+low_bound_df = DataFrame(Matrix(low_bound_timeseries'), ["juveniles_low", "sub_adults_low", "adults_low"])
+
+upp_bound_timeseries = dropdims(mapslices(x -> quantile(x, 0.975), stochastic_results; dims=3); dims=3)
+upp_bound_df = DataFrame(Matrix(upp_bound_timeseries'), ["juveniles_upp", "sub_adults_upp", "adults_upp"])
+
+results = hcat(median_df, low_bound_df, upp_bound_df)
+results.timestep = 1:nrow(results)
+
+results_longer = stack(
+    results, # Wide-format dataframe
+    Not(:timestep), # Rotating all columns except the `timestep` column
+    :timestep, # `timestep` column will be repeated multiple times
+) # The result is completely stacked, so we want to unstack by one level to have 3 individual columns
+
+results_longer.stage = first.(split.(results_longer.variable, "_"))
+results_longer.stat = last.(split.(results_longer.variable, "_"))
+results = unstack(
+    results_longer, # Long-format dataframe
+    [:timestep, :stage], # There are unique combinations for each timestep and stage value
+    :stat, # The variable column that has the names for the result columns
+    :value # The column that stores values
+)
+```
+
+AlgebraOfGraphics uses `*` to combine data, mappings and visuals, and uses `+` to add layers on top of one another.
+
+```{julia}
+median_lines = data(results) * mapping(:timestep, :med, color=:stage) * visual(Lines)
+quantile_bands = data(results) * mapping(:timestep, :low, :upp, color=:stage) * visual(Band; alpha=0.3)
+
+fig = draw(median_lines + quantile_bands)
+```
+
+We also may want to visualise some individual model simulations to better visualise variation. We will select 300 time series out of the total 100,000 simulations.
+
+```{julia}
+fig = Figure(size=(800, 600))
+ax = Axis(fig[1,1], xlabel="Timestep", ylabel="Abundance")
+
+idx = rand(1:100000, 500)
+colours = Makie.wong_colors()[1:3] # Use the same colour palette as AlgebraOfGraphics.jl
+
+for i in idx
+    series!(ax, stochastic_results[:, :, i], color=map(x -> (x, 0.5), colours))
+end
+
+# Add the original deterministic projections on top
+series!(ax, projections_100t, solid_color=:black)
+
+legend_entries = [
+    PolyElement(; color=colours[1]),
+    PolyElement(; color=colours[2]),
+    PolyElement(; color=colours[3])
+]
+Legend(
+    fig[2, 1], 
+    legend_entries, 
+    ["juveniles", "sub_adults", "adults"]; 
+    tell_width=false, 
+    tell_height=false, 
+    orientation=:horizontal
+)
+
+display(fig)
 ```
