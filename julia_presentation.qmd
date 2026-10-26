@@ -1,0 +1,166 @@
+---
+title: "Julia programming language"
+format:
+  revealjs: 
+    slide-number: true
+    preview-links: auto
+    embed-resources: true
+    chalkboard: false
+---
+
+## 
+
+In this presentation:
+
+- I will introduce the Julia programming language
+- discuss features and packages
+- Look at some of the strengths and weaknesses of julia
+- demonstrate an example using julia to perform dynamic modelling and analyses
+
+## Julia {.smaller}
+
+![](figs/julia-logo-color.png){.absolute right="10" width="320" height="200"}
+
+- First released in 2012
+- \> 12,000 registered packages (and more on GitHub)
+
+- Developed to combine features from many languages:
+    - Open-source and -access
+    - Speed of C
+    - Dynamic high-level interface
+    - General and machine learning applications of Python
+    - Data science and statistical analyses of Python and R
+
+. . .
+
+![](figs/julia_repl.png){.absolute top="500" left="5" width="774" height="268"}
+
+## Features {.smaller}
+
+- Just-in-time compilation
+
+Julia compiles functions into machine code the first time they are run in a session,
+allowing C / C++ speeds for subsequent calls.
+
+- Multiple-dispatch
+
+A single julia function can express different behaviour depending on the types of
+arguments used.
+
+- Environment package manager
+
+The package manager sets up environments that track package versions, allowing
+fully reproducible workflows and easy handling of package dependencies.
+
+- Simple parallelisation
+
+Easily parallelise code with `Threads.jl` or `FLoops.jl`.
+
+## Some standout Julia packages {.smaller}
+
+[Makie.jl](https://docs.makie.org/stable/) for fast and fully customisable data plotting.
+Including large datasets, interactive plots and animations.
+
+. . .
+
+<br>
+[Turing.jl](https://turinglang.org/) for fast and flexible Bayesian modelling.
+
+. . .
+
+<br>
+[DifferentialEquations.jl](https://docs.sciml.ai/DiffEqDocs/stable/) for solving
+many types of differential equations.
+
+. . .
+
+<br>
+[CUDA.jl](https://cuda.juliagpu.org/stable/) for easily writing GPU-compatible code
+from Julia.
+
+. . .
+
+<br>
+[MLJ.jl](https://juliaml.ai/) / [Flux.jl](https://fluxml.ai/Flux.jl/stable/) for
+machine learning.
+
+. . .
+
+<br>
+[YAXArrays.jl](https://juliadatacubes.github.io/YAXArrays.jl/stable/) useful for
+working with large data sets (e.g. plotting / analysing climate data).
+
+. . .
+
+<br>
+[JuMP.jl](https://jump.dev/) framework for mathematical optimisation. Used to solve
+real-world problems, including at distribution at Renault.
+
+. . .
+
+<br>
+[MixedModels.jl](https://juliastats.org/MixedModels.jl/v5.8/for_r_users/) for linear and
+generalized linear mixed-effect modelling. Developed as a successor to R's `lme4`.
+
+## Who should consider Julia? {.smaller}
+
+Someone:
+
+- *Wanting to learn a new language*: julia has many useful features that are
+interesting to learn: rich types, multiple dispatch and macros / metaprogramming
+
+. . .
+
+<br>
+
+- *Writing custom code that performs many calculations*: (Avoiding the two-language
+ problem) Custom repetitive code makes the most of julia's quick
+development and runtime.
+    - Dynamic population / ecosystem modelling
+    - Performing custom analyses on large datasets
+
+. . .
+
+<br>
+
+- *Using parallel processing*: julia has shared-memory multithreading and
+distributed computing built-in with `Threads` and `Distributed`, as well as 
+being able to write GPU code in Julia itself (`CUDA.jl`)
+
+. . .
+
+<br>
+
+## Maybe not someone: {.smaller}
+
+. . .
+
+- *Running short, one-off analyses / scripts*: julia's JIT compilation means that the
+there is slower initial startup / first runs. Code that repeatedly uses functions
+benefits more from julia's speed.
+
+. . .
+
+<br>
+
+- *Using strong existing packages in R/Python*: julia's ecosystem is not as
+developed as R/Python, so some analyses are smoother in other languages, e.g.
+meta-analyses (`metafor`), GAMs (`mgcv`), deep-learing (`pytorch`).
+
+## Some useful resources 
+
+All Julia (and package) documentation is hosted on repository websites.
+
+If you are wanting to learn some Julia basics: 
+
+## Any questions so far?
+
+Next we will go into an example where julia can excel.
+[GitHub: eco-ben/jl_ecomodel_example](https://github.com/eco-ben/jl_ecomodel_example)
+
+- Dynamic population modelling
+- Output data exploration
+- Plotting with Makie.jl and AlgebraOfGraphics.jl
+
+Let me know if there's anything else you are keen to hear about with Julia.
+
