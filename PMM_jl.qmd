@@ -6,31 +6,49 @@ format:
     css: styles.css
     embed-resources: true
     highlight-style: monokai
+editor:
+  markdown:
+    wrap: 92
 ---
 
 # Background
 
-We will use an example from the book `A Practical Handbook for Population Viability Analysis` (Morris et al. 1999).
+We will use an example from the book
+`A Practical Handbook for Population Viability Analysis` (Morris et al. 1999).
 
-This example demonstrates possible code and techniques to perform population viability analysis using population Projection Matrix Models using the example in Box 4.1.
+This example demonstrates possible code and techniques to perform population viability
+analysis using population Projection Matrix Models using the example in Box 4.1.
 
-A Projection Matrix Model combines life-history data (transitions between different life stages) and abundance estimates to project possible future outcomes for a population. This example uses data on American Oystercatchers.
+A Projection Matrix Model combines life-history data (transitions between different life
+stages) and abundance estimates to project possible future outcomes for a population. This
+example uses data on American Oystercatchers.
 
 ![American Oystercatcher (CornellLab: All About Birds)](figs/American_Oystercatcher_AAB.jpg)
 
 # Julia packages and environments
 
-Julia uses environments to install and manage different packages that are used in a project. This is accessed by pressing `]` in the Julia terminal (return using `Ctrl + c`).
+Julia uses environments to install and manage different packages that are used in a project.
+This is accessed by pressing `]` in the Julia terminal (return using `Ctrl + c`).
 
 <!-- Can also be accessed using `Pkg.*()` e.g. `Pkg.add()` or `Pkg.rm()` -->
 
-Required package names are recorded in the `Project.toml` file. Julia and package versions are recorded in the `Manifest.toml` file. These are machine-edited files that do not need to be edited manually.
+Required package names are recorded in the `Project.toml` file. Julia and package versions
+are recorded in the `Manifest.toml` file. These are machine-edited files that do not need to
+be edited manually.
 
-Package management commands: - `activate` : activate a new environment in the current folder. This creates `Project.toml` and `Manifest.toml` files to create an environment. - `instantiate` : setup an environment from existing `*.toml` files. This is used if you clone a project from GitHub for example. - `add` : Add a package (can include versions or GitHub repositories). - `rm` : Remove a package from the environment. - `status` : See current environment status (packages and julia version). - `pin` : Set the version of a package(s) to be stable. This is useful for reproducibility and ensuring consistent package version use.
+Package management commands: - `activate` : activate a new environment in the current
+folder. This creates `Project.toml` and `Manifest.toml` files to create an environment. -
+`instantiate` : setup an environment from existing `*.toml` files. This is used if you clone
+a project from GitHub for example. - `add` : Add a package (can include versions or GitHub
+repositories). - `rm` : Remove a package from the environment. - `status` : See current
+environment status (packages and julia version). - `pin` : Set the version of a package(s)
+to be stable. This is useful for reproducibility and ensuring consistent package version
+use.
 
 ## Example
 
-Use the REPL (terminal) to activate the package manager, and add `DataFrames` package. `]` -\> `add DataFrames`
+Use the REPL (terminal) to activate the package manager, and add `DataFrames` package. `]`
+-\> `add DataFrames`
 
 Then the package can be loaded in the session.
 
@@ -43,11 +61,14 @@ using Statistics # provides statistical functions such as `median`, `quantile` e
 
 # Step 1: Stage-structured matrix
 
-The first step of using a Projected Matrix Model is to create a transition matrix between components of the target population.
+The first step of using a Projected Matrix Model is to create a transition matrix between
+components of the target population.
 
 - Matrix rows and columns represent stages of the population of interest
-- Values represent the rate of transition (annual or other temporal scale) between each combination of size classes
-- Columns represent the stage transitioning FROM and rows represent the stage transitioning TO
+- Values represent the rate of transition (annual or other temporal scale) between each
+  combination of size classes
+- Columns represent the stage transitioning FROM and rows represent the stage transitioning
+  TO
 
 To do this in Julia we create an object of type `Matrix{Float64}`.
 
@@ -86,7 +107,8 @@ ao_stage_matrix
 
 # Step 2: Initial population conditions
 
-Step 2 is to setup the initial population conditions in a population state vector. This holds current values for the abundance of each stage (i.e. N~0~).
+Step 2 is to setup the initial population conditions in a population state vector. This
+holds current values for the abundance of each stage (i.e. N~0~).
 
 ```{julia}
 # Initial population state in the format
@@ -96,7 +118,8 @@ N_0 = [40, 50, 60]
 
 # Step 3: Matrix multiplication projection
 
-The third step in projection matrix modelling is to project the population state using transition values.
+The third step in projection matrix modelling is to project the population state using
+transition values.
 
 ```{julia}
 N_1 = ao_stage_matrix * N_0
@@ -104,7 +127,8 @@ N_1 = ao_stage_matrix * N_0
 
 # Projection Matrix Modelling
 
-Now we can turn the matrix multiplication into a model function that will project the population for a determined number of years.
+Now we can turn the matrix multiplication into a model function that will project the
+population for a determined number of years.
 
 Creating a function in julia uses the `function`, `return`, and `end` keywords.
 
@@ -140,15 +164,20 @@ projections_100t = project_model(N_0, ao_stage_matrix, 99)
 
 There are two main ecosystems for visualisation in julia: Plots.jl and Makie.jl
 
-I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains a backend package (you do not need to install) and several front-end packages (that you will install) depending on your use case.
+I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains a
+backend package (you do not need to install) and several front-end packages (that you will
+install) depending on your use case.
 
 - CairoMakie.jl is great for fast, high resolution, publication quality plotting.
 - GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots.
-- Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar to `ggplot2` in R.
+- Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar to
+  `ggplot2` in R.
 
 ## Plotting with base Makie.jl for fine-scale control
 
-Using Makie.jl (with CairoMakie or GLMakie frontend) allows more fine-scale control, and more plot types (e.g. animations, 3D plots) but can take more time to develop compared to AlgebraOfGraphics.jl.
+Using Makie.jl (with CairoMakie or GLMakie frontend) allows more fine-scale control, and
+more plot types (e.g. animations, 3D plots) but can take more time to develop compared to
+AlgebraOfGraphics.jl.
 
 ```{julia}
 using CairoMakie
@@ -173,7 +202,10 @@ fig
 
 ## Plotting algebraically with AlgebraOfGraphics.jl for speed
 
-AlgebraOfGraphics.jl (AoG) allows you to get quickly get from DataFrame to a figure, similar to how ggplot2 works, but has fewer plot types available than base Makie.jl. AoG uses Makie.jl behind the scenes, so all plots can be custom modified using Makie.jl syntax to add legends, colour bars etc.
+AlgebraOfGraphics.jl (AoG) allows you to get quickly get from DataFrame to a figure, similar
+to how ggplot2 works, but has fewer plot types available than base Makie.jl. AoG uses
+Makie.jl behind the scenes, so all plots can be custom modified using Makie.jl syntax to add
+legends, colour bars etc.
 
 ```{julia}
 # using GLMakie # Would usually be required if not loaded already
@@ -197,15 +229,24 @@ fig = draw(projection_lines)
 
 # Example of stochastic simulation and plotting workflow with multiple dispatch
 
-Transition rates may be affected by stochastic environmental variation, affecting population projections.
+Transition rates may be affected by stochastic environmental variation, affecting population
+projections.
 
-In this example we incorporate stochasticity by drawing our rate values from continuous distributions. For simplicity, we will use uniform distributions of rate values loosely based on the values from Morris et al. (1999).
+In this example we incorporate stochasticity by drawing our rate values from continuous
+distributions. For simplicity, we will use uniform distributions of rate values loosely
+based on the values from Morris et al. (1999).
 
-We will only vary the fecundity rates (adult to juvenile transition) and adult survival rates (adult to adult transition).
+We will only vary the fecundity rates (adult to juvenile transition) and adult survival
+rates (adult to adult transition).
 
-The `Distributions.jl` package provides functionality for statistical distributions and sampling. We use `Dirac()` to just sample a constant value (i.e. keep values from Morris et al.) and `Uniform(a, b)` to specify a uniform distribution between values `a` and `b`.
+The `Distributions.jl` package provides functionality for statistical distributions and
+sampling. We use `Dirac()` to just sample a constant value (i.e. keep values from Morris et
+al.) and `Uniform(a, b)` to specify a uniform distribution between values `a` and `b`.
 
-We format these distributions in a matrix. We then use Julia *broadcasting*. Broadcasting runs a function over each element in an array. This functionality uses a `.` before function brackets and the same as using a `for` loop or `map` function to sample each of the distributions in our object.
+We format these distributions in a matrix. We then use Julia *broadcasting*. Broadcasting
+runs a function over each element in an array. This functionality uses a `.` before function
+brackets and the same as using a `for` loop or `map` function to sample each of the
+distributions in our object.
 
 ## Creating distributions
 
@@ -230,11 +271,17 @@ We can now sample values for many different model projections.
 
 ## Multiple dispatch
 
-Multiple dispatch is a feature that lets you define multiple methods for a single function depending on the type of the arguments given. This means that functions can have different behaviour depending on the type of arguments.
+Multiple dispatch is a feature that lets you define multiple methods for a single function
+depending on the type of the arguments given. This means that functions can have different
+behaviour depending on the type of arguments.
 
-Currently our function `project_model()` has one method, where the `transition_parameter_matrix` argument is of the type `Matrix{Float64}` (so this will not work with our distribution matrix).
+Currently our function `project_model()` has one method, where the
+`transition_parameter_matrix` argument is of the type `Matrix{Float64}` (so this will not
+work with our distribution matrix).
 
-We can use multiple dispatch to create a second method for this function so that different behaviour is used when the type of `transition_parameter_matrix` is `Matrix{UnivariateDistribution}`.
+We can use multiple dispatch to create a second method for this function so that different
+behaviour is used when the type of `transition_parameter_matrix` is
+`Matrix{UnivariateDistribution}`.
 
 Defining a new method for the function is the same how we defined a function earlier.
 
@@ -262,7 +309,9 @@ end
 
 ## Simulations
 
-Now we can use this new model method to project many stochastic simulations of our PMM and visualise the results. We still use `N_0` as our initial population state, and model `99` years.
+Now we can use this new model method to project many stochastic simulations of our PMM and
+visualise the results. We still use `N_0` as our initial population state, and model `99`
+years.
 
 ```{julia}
 # We will run the model for 100,000 simulations
@@ -284,7 +333,8 @@ stochastic_results
 
 # Plotting
 
-To understand how environmental variation translates to population variation we might plot individual timeseries. Here we will plot 2,000 out of the 100,000 timeseries for speed.
+To understand how environmental variation translates to population variation we might plot
+individual timeseries. Here we will plot 2,000 out of the 100,000 timeseries for speed.
 
 ```{julia}
 fig = Figure(size=(650, 450))
