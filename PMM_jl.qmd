@@ -106,7 +106,7 @@ N_1 = ao_stage_matrix * N_0
 
 Now we can turn the matrix multiplication into a model function that will project the population for a determined number of years.
 
-Creating a function in julia uses the `function` and `end` keywords.
+Creating a function in julia uses the `function`, `return`, and `end` keywords.
 
 ```{julia}
 function project_model(
@@ -138,15 +138,17 @@ Now we can project the population model for 100 years and visualise the projecti
 projections_100t = project_model(N_0, ao_stage_matrix, 99)
 ```
 
-There are two main ecosystems for visualisation in julia: Plots.jl, Makie.jl and Gadfly.jl
+There are two main ecosystems for visualisation in julia: Plots.jl and Makie.jl
 
-I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains the backend Makie.jl packages (you do not need to install) and several front-end packages (that you will install) depending on your use case.
+I will focus on Makie.jl for this session. `Makie.jl` is an ecosystem that contains a backend package (you do not need to install) and several front-end packages (that you will install) depending on your use case.
 
-Makie.jl provides the functionality and the backends provide the rendering of plots. CairoMakie.jl is great for fast, high resolution, publication quality plotting. GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots. Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar to `ggplot2` in R.
+- CairoMakie.jl is great for fast, high resolution, publication quality plotting.
+- GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots.
+- Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar to `ggplot2` in R.
 
 ## Plotting with base Makie.jl for fine-scale control
 
-Using Makie.jl directly allows more fine-scale control, and more plot types (e.g. animations, 3D plots) but can take more time to develop.
+Using Makie.jl (with CairoMakie or GLMakie frontend) allows more fine-scale control, and more plot types (e.g. animations, 3D plots) but can take more time to develop compared to AlgebraOfGraphics.jl.
 
 ```{julia}
 using CairoMakie
@@ -171,7 +173,7 @@ fig
 
 ## Plotting algebraically with AlgebraOfGraphics.jl for speed
 
-Plotting with AlgebraOfGraphics.jl uses Makie.jl behind the scenes, so all plots can be custom modified. This package allows more fast plotting from DataFrames, similar to ggplot2, but has fewer plot types available than base Makie.jl.
+AlgebraOfGraphics.jl (AoG) allows you to get quickly get from DataFrame to a figure, similar to how ggplot2 works, but has fewer plot types available than base Makie.jl. AoG uses Makie.jl behind the scenes, so all plots can be custom modified using Makie.jl syntax to add legends, colour bars etc.
 
 ```{julia}
 # using GLMakie # Would usually be required if not loaded already
@@ -195,7 +197,7 @@ fig = draw(projection_lines)
 
 # Example of stochastic simulation and plotting workflow with multiple dispatch
 
-Transition rates may be affected by stochastic environmental variation, affecting population projections. 
+Transition rates may be affected by stochastic environmental variation, affecting population projections.
 
 In this example we incorporate stochasticity by drawing our rate values from continuous distributions. For simplicity, we will use uniform distributions of rate values loosely based on the values from Morris et al. (1999).
 
@@ -203,8 +205,7 @@ We will only vary the fecundity rates (adult to juvenile transition) and adult s
 
 The `Distributions.jl` package provides functionality for statistical distributions and sampling. We use `Dirac()` to just sample a constant value (i.e. keep values from Morris et al.) and `Uniform(a, b)` to specify a uniform distribution between values `a` and `b`.
 
-We format these distributions in a matrix.
-We then use Julia *broadcasting*. Broadcasting runs a function over each element in an array. This functionality uses a `.` before function brackets and the same as using a `for` loop or `map` function to sample each of the distributions in our object.
+We format these distributions in a matrix. We then use Julia *broadcasting*. Broadcasting runs a function over each element in an array. This functionality uses a `.` before function brackets and the same as using a `for` loop or `map` function to sample each of the distributions in our object.
 
 ## Creating distributions
 
@@ -213,7 +214,7 @@ using Distributions
 
 # Create a matrix of distributions for our sampling
 # This is not the most efficient way to sample matrices since most of the values are constant,
-# but this method can demonstrate broadcasting
+# but here we use it to demonstrate broadcasting
 
 dist_stage_matrix = UnivariateDistribution[
     Dirac(0.0)      Dirac(0.0)      Uniform(0.054 - 0.05, 0.054 + 0.05)
@@ -277,6 +278,8 @@ stochastic_results = fill(NaN, n_stages, years + 1, n_sim)
 for i in 1:n_sim
     stochastic_results[:, :, i] = project_model(N_0, dist_stage_matrix, years)
 end
+
+stochastic_results
 ```
 
 # Plotting
