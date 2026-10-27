@@ -17,7 +17,7 @@ We will use an example from the book
 `A Practical Handbook for Population Viability Analysis` (Morris et al. 1999).
 
 This example demonstrates possible code and techniques to perform population viability
-analysis using population Projection Matrix Models using the example in Box 4.1.
+analysis using population Projection Matrix Models from the example in Box 4.1.
 
 A Projection Matrix Model combines life-history data (transitions between different life
 stages) and abundance estimates to project possible future outcomes for a population. This
@@ -36,14 +36,17 @@ Required package names are recorded in the `Project.toml` file. Julia and packag
 are recorded in the `Manifest.toml` file. These are machine-edited files that do not need to
 be edited manually.
 
-Package management commands: - `activate` : activate a new environment in the current
-folder. This creates `Project.toml` and `Manifest.toml` files to create an environment. -
-`instantiate` : setup an environment from existing `*.toml` files. This is used if you clone
-a project from GitHub for example. - `add` : Add a package (can include versions or GitHub
-repositories). - `rm` : Remove a package from the environment. - `status` : See current
-environment status (packages and julia version). - `pin` : Set the version of a package(s)
-to be stable. This is useful for reproducibility and ensuring consistent package version
-use.
+Package management commands:
+
+- `activate` : activate a new environment in the current folder. This creates `Project.toml`
+  and `Manifest.toml` files to create an environment.
+- `instantiate` : setup an environment from existing `*.toml` files. This is used if you
+  clone a project from GitHub for example.
+- `add` : Add a package (can include versions or GitHub repositories).
+- `rm` : Remove a package from the environment.
+- `status` : See current environment status (packages and julia version).
+- `pin` : Set the version of a package(s) to be stable. This is useful for reproducibility
+  and ensuring consistent package version use.
 
 ## Example
 
@@ -119,7 +122,7 @@ N_0 = [40, 50, 60]
 # Step 3: Matrix multiplication projection
 
 The third step in projection matrix modelling is to project the population state using
-transition values.
+transition values. This is done through matrix \* vector multiplication.
 
 ```{julia}
 N_1 = ao_stage_matrix * N_0
@@ -169,7 +172,7 @@ backend package (you do not need to install) and several front-end packages (tha
 install) depending on your use case.
 
 - CairoMakie.jl is great for fast, high resolution, publication quality plotting.
-- GLMakie.jl is great for plotting interatively (zoom, navigate) while developing plots.
+- GLMakie.jl is great for plotting interactively (zoom, navigate) while developing plots.
 - Makie.jl also interacts with `AlgebraOfGraphics.jl` which is a plotting package similar to
   `ggplot2` in R.
 
@@ -211,13 +214,19 @@ legends, colour bars etc.
 # using GLMakie # Would usually be required if not loaded already
 using AlgebraOfGraphics
 
-# To work with AlgebraOfGraphics.jl we need a DataFrame, similar to ggplot2 in R
+# To work with AlgebraOfGraphics.jl we need a DataFrame
 # To do this we transpose the matrix and add column names
 projection_df = DataFrame(Matrix(projections_100t'), ["juveniles", "sub_adults", "adults"])
 projection_df.timestep = 1:nrow(projection_df)
 
 # Convert this to a long-format `stack` is equivalent to `pivot_longer` (`unstack` is equivalent to `pivot_wider`)
-projection_df = stack(projection_df, [:juveniles, :sub_adults, :adults], :timestep; variable_name=:stage, value_name=:abundance)
+projection_df = stack(
+    projection_df, 
+    [:juveniles, :sub_adults, :adults], 
+    :timestep; 
+    variable_name=:stage, 
+    value_name=:abundance
+)
 
 # Plotting with AlgebraOfGraphics
 # mapping() is equivalent to `aes` in ggplot() functions
@@ -323,7 +332,7 @@ years = 99
 stochastic_results = fill(NaN, n_stages, years + 1, n_sim)
 
 # Use a for loop to perform each simulation.
-# This could easily be parallelised using the FLoops.jl package by adding @floop before `for`
+# This could easily be parallelised using Threads by adding @threads before `for`
 for i in 1:n_sim
     stochastic_results[:, :, i] = project_model(N_0, dist_stage_matrix, years)
 end
@@ -333,7 +342,7 @@ stochastic_results
 
 # Plotting
 
-To understand how environmental variation translates to population variation we might plot
+To understand how environmental variation translates into population variation we might plot
 individual timeseries. Here we will plot 2,000 out of the 100,000 timeseries for speed.
 
 ```{julia}

@@ -145,11 +145,12 @@ benefits more from julia's speed.
 
 - *Using strong existing packages in R/Python*: julia's ecosystem is not as
 developed as R/Python, so some analyses are smoother in other languages, e.g.
-meta-analyses (`metafor`), GAMs (`mgcv`), deep-learing (`pytorch`).
+meta-analyses (`metafor`), GAMs (`mgcv`), deep-learning (`pytorch`).
+    - However, you can call R / Python packages from Julia (`RCall.jl` and `PythonCall.jl`)
 
 ## Some useful resources  {.smaller}
 
-If you are wanting to learn some Julias:
+If you are wanting to learn some Julia:
 
 [Julia learning page - resources for all levels](https://julialang.org/learning/)
 
