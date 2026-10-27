@@ -1,12 +1,11 @@
 ---
-title: "Population Viability Analysis Demonstration: Julia"
+title: "Dynamic population modelling demonstration with Julia"
 engine: julia
 format:
   html:
+    css: styles.css
     embed-resources: true
-    highlight-style: dracula
-    theme:
-      dark: darkly
+    highlight-style: monokai
 ---
 
 # Background
@@ -83,7 +82,6 @@ ao_stage_matrix = Matrix(ao_stages[:, [:juveniles, :sub_adults, :adults]])
 ao_stage_matrix = Matrix(ao_stages[:, Not(:to)])
 
 ao_stage_matrix
-typeof(ao_stage_matrix)
 ```
 
 # Step 2: Initial population conditions
@@ -108,7 +106,7 @@ N_1 = ao_stage_matrix * N_0
 
 Now we can turn the matrix multiplication into a model function that will project the population for a determined number of years.
 
-Creating a `function` in julia uses the `function` and `end` keywords.
+Creating a function in julia uses the `function` and `end` keywords.
 
 ```{julia}
 function project_model(
@@ -151,14 +149,14 @@ Makie.jl provides the functionality and the backends provide the rendering of pl
 Using Makie.jl directly allows more fine-scale control, and more plot types (e.g. animations, 3D plots) but can take more time to develop.
 
 ```{julia}
-using GLMakie
+using CairoMakie
 
 # Basic plotting:
 fig = series(projections_100t)
 
 # Finer control plotting:
-fig = Figure(size = (800, 600), fontsize=12)
-ax = Axis(fig[1, 1])
+fig = Figure(size = (650, 450), fontsize=12)
+ax = Axis(fig[1, 1], xlabel="Abundance", ylabel="Timestep")
 
 series!(ax, projections_100t, color=[:red, :green, :blue]) # Adding control of colours
 legend_entries = [
@@ -168,7 +166,7 @@ legend_entries = [
 ]
 Legend(fig[2, 1], legend_entries, ["juveniles", "sub_adults", "adults"]; tell_width=false, tell_height=false, orientation=:horizontal)
 
-display(fig)
+fig
 ```
 
 ## Plotting algebraically with AlgebraOfGraphics.jl for speed
@@ -197,13 +195,16 @@ fig = draw(projection_lines)
 
 # Example of stochastic simulation and plotting workflow with multiple dispatch
 
-When considering our population, population decline may by due to a low reproduction rate `0.054`. Transition rates may be affected by stochastic environmental variation, affecting population projections.
+Transition rates may be affected by stochastic environmental variation, affecting population projections. 
 
-In this example we incorporate stochasticity by drawing our rate values from continuous distributions. For simplicity, we will use uniform distributions of rate values loosely based on the values from Morris et al. (1999). We will only vary the fecundity rates (adult to juvenile transition) and adult survival rates (adult to adult transition).
+In this example we incorporate stochasticity by drawing our rate values from continuous distributions. For simplicity, we will use uniform distributions of rate values loosely based on the values from Morris et al. (1999).
 
-We do this with the `Distributions.jl` package which provides functionality for statistical distributions and sampling. We use `Dirac()` to just sample a constant value (i.e. keep values from Morris et al.) and `Uniform(a, b)` to specify a uniform distribution between values `a` and `b`.
+We will only vary the fecundity rates (adult to juvenile transition) and adult survival rates (adult to adult transition).
 
-We format these distributions in a matrix. We then use Julia *broadcasting*. Broadcasting runs a function over each element in an array. This functionality uses a `.` before function brackets and the same as using a `for` loop or `map` function to draw each of the distributions in our object.
+The `Distributions.jl` package provides functionality for statistical distributions and sampling. We use `Dirac()` to just sample a constant value (i.e. keep values from Morris et al.) and `Uniform(a, b)` to specify a uniform distribution between values `a` and `b`.
+
+We format these distributions in a matrix.
+We then use Julia *broadcasting*. Broadcasting runs a function over each element in an array. This functionality uses a `.` before function brackets and the same as using a `for` loop or `map` function to sample each of the distributions in our object.
 
 ## Creating distributions
 
@@ -211,6 +212,9 @@ We format these distributions in a matrix. We then use Julia *broadcasting*. Bro
 using Distributions
 
 # Create a matrix of distributions for our sampling
+# This is not the most efficient way to sample matrices since most of the values are constant,
+# but this method can demonstrate broadcasting
+
 dist_stage_matrix = UnivariateDistribution[
     Dirac(0.0)      Dirac(0.0)      Uniform(0.054 - 0.05, 0.054 + 0.05)
     Dirac(0.665)    Dirac(0.0)      Dirac(0.0)
@@ -225,18 +229,13 @@ We can now sample values for many different model projections.
 
 ## Multiple dispatch
 
-Multiple dispatch is a feature of Julia that lets you define multiple methods for a single function depending on the type of the arguments given. This means that functions can have different behaviour depending on the type of arguments.
+Multiple dispatch is a feature that lets you define multiple methods for a single function depending on the type of the arguments given. This means that functions can have different behaviour depending on the type of arguments.
 
 Currently our function `project_model()` has one method, where the `transition_parameter_matrix` argument is of the type `Matrix{Float64}` (so this will not work with our distribution matrix).
 
 We can use multiple dispatch to create a second method for this function so that different behaviour is used when the type of `transition_parameter_matrix` is `Matrix{UnivariateDistribution}`.
 
 Defining a new method for the function is the same how we defined a function earlier.
-
-```{julia}
-# Here we can see that this function call will produce an error because `project_model` doesn't accept our distribution matrix yet.
-#project_model(N_0, dist_stage_matrix, 2)
-```
 
 ```{julia}
 function project_model(
@@ -282,58 +281,17 @@ end
 
 # Plotting
 
-Plotting a neat figure with median timeseries and bands that represent 95% quantiles.
+To understand how environmental variation translates to population variation we might plot individual timeseries. Here we will plot 2,000 out of the 100,000 timeseries for speed.
 
 ```{julia}
-# We might want to summarise these simulations with a median time series and 95% quantile bands.
-median_timeseries = median(stochastic_results; dims=3) |> (x -> dropdims(x; dims=3))
-median_df = DataFrame(Matrix(median_timeseries'), ["juveniles_med", "sub_adults_med", "adults_med"])
-
-low_bound_timeseries = mapslices(x -> quantile(x, 0.025), stochastic_results; dims=3) |> (x -> dropdims(x; dims=3))
-low_bound_df = DataFrame(Matrix(low_bound_timeseries'), ["juveniles_low", "sub_adults_low", "adults_low"])
-
-upp_bound_timeseries = dropdims(mapslices(x -> quantile(x, 0.975), stochastic_results; dims=3); dims=3)
-upp_bound_df = DataFrame(Matrix(upp_bound_timeseries'), ["juveniles_upp", "sub_adults_upp", "adults_upp"])
-
-results = hcat(median_df, low_bound_df, upp_bound_df)
-results.timestep = 1:nrow(results)
-
-results_longer = stack(
-    results, # Wide-format dataframe
-    Not(:timestep), # Rotating all columns except the `timestep` column
-    :timestep, # `timestep` column will be repeated multiple times
-) # The result is completely stacked, so we want to unstack by one level to have 3 individual columns
-
-results_longer.stage = first.(split.(results_longer.variable, "_"))
-results_longer.stat = last.(split.(results_longer.variable, "_"))
-results = unstack(
-    results_longer, # Long-format dataframe
-    [:timestep, :stage], # There are unique combinations for each timestep and stage value
-    :stat, # The variable column that has the names for the result columns
-    :value # The column that stores values
-)
-```
-
-AlgebraOfGraphics uses `*` to combine data, mappings and visuals, and uses `+` to add layers on top of one another.
-
-```{julia}
-median_lines = data(results) * mapping(:timestep, :med, color=:stage) * visual(Lines)
-quantile_bands = data(results) * mapping(:timestep, :low, :upp, color=:stage) * visual(Band; alpha=0.3)
-
-fig = draw(median_lines + quantile_bands)
-```
-
-We also may want to visualise some individual model simulations to better visualise variation. We will select 300 time series out of the total 100,000 simulations.
-
-```{julia}
-fig = Figure(size=(800, 600))
+fig = Figure(size=(650, 450))
 ax = Axis(fig[1,1], xlabel="Timestep", ylabel="Abundance")
 
-idx = rand(1:100000, 500)
+idx = rand(1:100000, 2000)
 colours = Makie.wong_colors()[1:3] # Use the same colour palette as AlgebraOfGraphics.jl
 
 for i in idx
-    series!(ax, stochastic_results[:, :, i], color=map(x -> (x, 0.5), colours))
+    series!(ax, stochastic_results[:, :, i], color=map(x -> (x, 0.3), colours))
 end
 
 # Add the original deterministic projections on top
@@ -353,5 +311,5 @@ Legend(
     orientation=:horizontal
 )
 
-display(fig)
+fig
 ```

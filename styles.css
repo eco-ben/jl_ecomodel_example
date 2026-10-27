@@ -1,0 +1,7 @@
+/* Only inline code, not code blocks */
+:not(pre) > code {
+  color: #c7254e;              /* text colour */
+  background-color: #A9A9A9 !important;   /* background */
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}

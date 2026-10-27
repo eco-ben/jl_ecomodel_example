@@ -3,7 +3,7 @@ title: "Julia programming language"
 format:
   revealjs: 
     slide-number: true
-    preview-links: auto
+    preview-links: true
     embed-resources: true
     chalkboard: false
 ---
@@ -147,20 +147,39 @@ benefits more from julia's speed.
 developed as R/Python, so some analyses are smoother in other languages, e.g.
 meta-analyses (`metafor`), GAMs (`mgcv`), deep-learing (`pytorch`).
 
-## Some useful resources 
+## Some useful resources  {.smaller}
 
-All Julia (and package) documentation is hosted on repository websites.
+If you are wanting to learn some Julias:
 
-If you are wanting to learn some Julia basics: 
+[Julia learning page - resources for all levels](https://julialang.org/learning/)
+
+[Julia language documentation](https://docs.julialang.org/en/v1/)
+
+[Video: Introduction to Julia (language basics)](https://youtu.be/46hkaaDBgX4?si=sfBOJA2IooPR1o9X)
+
+<br>
+If you want to get the most speed out of your julia code:
+
+[Performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/)
+
+<br>
+If you want to use R / Python packages from within Julia:
+
+[RCall.jl](https://juliainterop.github.io/RCall.jl/stable/)
+
+[PythonCall.jl](https://juliapy.github.io/PythonCall.jl/stable/)
 
 ## Any questions so far?
 
 Next we will go into an example where julia can excel.
-[GitHub: eco-ben/jl_ecomodel_example](https://github.com/eco-ben/jl_ecomodel_example)
 
 - Dynamic population modelling
 - Output data exploration
 - Plotting with Makie.jl and AlgebraOfGraphics.jl
+
+[GitHub: eco-ben/jl_ecomodel_example](https://github.com/eco-ben/jl_ecomodel_example)
+
+<br>
 
 Let me know if there's anything else you are keen to hear about with Julia.
 
