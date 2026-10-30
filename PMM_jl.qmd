@@ -38,6 +38,7 @@ be edited manually.
 
 Package management commands:
 
+
 - `activate` : activate a new environment in the current folder. This creates `Project.toml`
   and `Manifest.toml` files to create an environment.
 - `instantiate` : setup an environment from existing `*.toml` files. This is used if you
