@@ -1029,7 +1029,7 @@ margin-right: 0; }
 <ul>
 <li>Just-in-time compilation</li>
 </ul>
-<p>Julia compiles functions into machine code the first time they are run in a session, allowing C / C++ speeds for subsequent calls.</p>
+<p>Julia compiles functions into machine code the first time they are run in a session, allowing C / C++ speeds for subsequent calls. (AOT compilation is also possible now - <a href="https://github.com/JuliaLang/JuliaC.jl">JuliaC.jl</a>)</p>
 <ul>
 <li>Multiple-dispatch</li>
 </ul>
@@ -1041,7 +1041,7 @@ margin-right: 0; }
 <ul>
 <li>Simple parallelisation</li>
 </ul>
-<p>Easily parallelise code with <code>Threads.jl</code> or <code>FLoops.jl</code>.</p>
+<p>Easily parallelise code with <code>Threads</code> or <code>Distributed</code>.</p>
 </section>
 <section id="some-standout-julia-packages" class="slide level2 smaller">
 <h2>Some standout Julia packages</h2>
@@ -1051,9 +1051,6 @@ margin-right: 0; }
 </div>
 <div class="fragment">
 <p><br> <a href="https://docs.sciml.ai/DiffEqDocs/stable/">DifferentialEquations.jl</a> for solving many types of differential equations.</p>
-</div>
-<div class="fragment">
-<p><br> <a href="https://cuda.juliagpu.org/stable/">CUDA.jl</a> for easily writing GPU-compatible code from Julia.</p>
 </div>
 <div class="fragment">
 <p><br> <a href="https://juliaml.ai/">MLJ.jl</a> / <a href="https://fluxml.ai/Flux.jl/stable/">Flux.jl</a> for machine learning.</p>
@@ -1104,13 +1101,16 @@ margin-right: 0; }
 <div class="fragment">
 <p><br></p>
 <ul>
-<li><em>Using strong existing packages in R/Python</em>: julia’s ecosystem is not as developed as R/Python, so some analyses are smoother in other languages, e.g. meta-analyses (<code>metafor</code>), GAMs (<code>mgcv</code>), deep-learing (<code>pytorch</code>).</li>
+<li><em>Using strong existing packages in R/Python</em>: julia’s ecosystem is not as developed as R/Python, so some analyses are smoother in other languages, e.g. meta-analyses (<code>metafor</code>), GAMs (<code>mgcv</code>), deep-learning (<code>pytorch</code>).
+<ul>
+<li>However, you can call R / Python packages from Julia (<code>RCall.jl</code> and <code>PythonCall.jl</code>)</li>
+</ul></li>
 </ul>
 </div>
 </section>
 <section id="some-useful-resources" class="slide level2 smaller">
 <h2>Some useful resources</h2>
-<p>If you are wanting to learn some Julias:</p>
+<p>If you are wanting to learn some Julia:</p>
 <p><a href="https://julialang.org/learning/">Julia learning page - resources for all levels</a></p>
 <p><a href="https://docs.julialang.org/en/v1/">Julia language documentation</a></p>
 <p><a href="https://youtu.be/46hkaaDBgX4?si=sfBOJA2IooPR1o9X">Video: Introduction to Julia (language basics)</a></p>

@@ -41,6 +41,7 @@ In this presentation:
 
 Julia compiles functions into machine code the first time they are run in a session,
 allowing C / C++ speeds for subsequent calls.
+(AOT compilation is also possible now - [JuliaC.jl](https://github.com/JuliaLang/JuliaC.jl))
 
 - Multiple-dispatch
 
@@ -54,7 +55,7 @@ fully reproducible workflows and easy handling of package dependencies.
 
 - Simple parallelisation
 
-Easily parallelise code with `Threads.jl` or `FLoops.jl`.
+Easily parallelise code with `Threads` or `Distributed`.
 
 ## Some standout Julia packages {.smaller}
 
@@ -71,12 +72,6 @@ Including large datasets, interactive plots and animations.
 <br>
 [DifferentialEquations.jl](https://docs.sciml.ai/DiffEqDocs/stable/) for solving
 many types of differential equations.
-
-. . .
-
-<br>
-[CUDA.jl](https://cuda.juliagpu.org/stable/) for easily writing GPU-compatible code
-from Julia.
 
 . . .
 
